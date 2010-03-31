@@ -50,6 +50,17 @@ class SingleUseStatusCodes:
     UNSUPPORTED_PAYMENT_METHOD = "NP"
     NOT_REGISTERED = "NM"
 
+class RecurringUseStatusCodes:
+    SUCCESS_BALANCE_TRANSFER = "SA"
+    SUCCESS_BANK_TRANSFER = "SB"
+    SUCCESS_CREDIT_CARD = "SC"
+    SYSTEM_ERROR = "SE"
+    ABORTED = "A"
+    ERROR = "CE"
+    PAYMENT_METHOD_MISMATCH = "PE"
+    UNSUPPORTED_PAYMENT_METHOD = "NP"
+    NOT_REGISTERED = "NM"
+
 SANDBOX_ENDPOINT = "https://authorize.payments-sandbox.amazon.com/cobranded-ui/actions/start"
 ENDPOINT = "https://authorize.payments.amazon.com/cobranded-ui/actions/start"
 AMAZON_FPS_VERSION = '2009-01-09'
@@ -124,6 +135,58 @@ class AuthorizationClient(base.AmazonFPSClient):
         url = self.endpoint + qs
         return callerReference, url
 
+    def authorize_recurring_use_token(self, returnUrl, transactionAmount,
+                                   recurringPeriod,
+                                   addressName=None, addressLine1=None,
+                                   addressLine2=None, city=None,
+                                   state=None, zip=None,
+                                   phoneNumber=None, collectShippingAddress=None,
+                                   currencyCode=None, discount=None,
+                                   giftWrapping=None, handling=None,
+                                   itemTotal=None, paymentMethod=None,
+                                   paymentReason=None, reserve=None,
+                                   shipping=None, tax=None,
+                                   cobrandingStyle=None, cobrandingUrl=None,
+                                   callerReference=None, websiteDescription=None):
+        assert cobrandingStyle is None or cobrandingStyle in (LOGO, BANNER)
+        cobrandingUrl = cobrandingUrl or conf.DEFAULT_COBRANDING_URL
+        if callerReference is None:
+            callerReference = self.get_caller_reference()
+        qs = self.get_query_string({
+                'addressName':addressName,
+                'addressLine1':addressLine1,
+                'addressLine2':addressLine2,
+                'city':city,
+                'state':state,
+                'zip':zip,
+                'phoneNumber':phoneNumber,
+                'collectShippingAddress':collectShippingAddress,
+                'currencyCode':currencyCode,
+                'discount':discount,
+                'giftWrapping':giftWrapping,
+                'handling':handling,
+                'itemTotal':itemTotal,
+                'paymentMethod':paymentMethod,
+                'paymentReason':paymentReason,
+                'reserve':reserve,
+                'shipping':shipping,
+                'tax':tax,
+
+                'recurringPeriod':recurringPeriod,
+
+                'callerReference':callerReference,
+                'cobrandingStyle':cobrandingStyle,
+                'cobrandingUrl':cobrandingUrl,
+
+                'pipelineName':Pipelines.RECURRING,
+                'returnUrl':returnUrl,
+                'transactionAmount':transactionAmount,
+                'websiteDescription':websiteDescription,
+                })
+        LOGGER.info("Getting recurring use token with qs %s", qs)
+        url = self.endpoint + qs
+        return callerReference, url
+
     def get_caller_reference(self):
         """Return a suitably random caller reference string."""
         return str(uuid.uuid4())
@@ -136,6 +199,36 @@ class SingleUseTokenResponse(base.ParameterizedResponse):
         SingleUseStatusCodes.SUCCESS_BALANCE_TRANSFER,
         SingleUseStatusCodes.SUCCESS_BANK_TRANSFER,
         SingleUseStatusCodes.SUCCESS_CREDIT_CARD,
+        )
+
+    @property
+    def is_success(self):
+        return self.status in self.SUCCESS_CODES
+
+    @property
+    def status(self):
+        return self.parameters.get("status")
+
+    @property
+    def caller_reference(self):
+        return self.parameters['callerReference']
+
+    @property
+    def token_id(self):
+        return self.parameters['tokenID']
+
+    @property
+    def error_message(self):
+        return self.parameters.get("errorMessage")
+
+
+class RecurringUseTokenResponse(base.ParameterizedResponse):
+    """A recurring use authorization response."""
+
+    SUCCESS_CODES = (
+        RecurringUseStatusCodes.SUCCESS_BALANCE_TRANSFER,
+        RecurringUseStatusCodes.SUCCESS_BANK_TRANSFER,
+        RecurringUseStatusCodes.SUCCESS_CREDIT_CARD,
         )
 
     @property
