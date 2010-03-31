@@ -39,7 +39,7 @@ class InvalidSignatureError(Exception):
 class SignatureValidator(object):
     """A signature validator"""
 
-    def __init__(self,access_key_id=None, secret_key=None):
+    def __init__(self, access_key_id=None, secret_key=None):
         access_key_id = access_key_id or conf.DEFAULT_ACCESS_KEY_ID
         secret_key = secret_key or conf.DEFAULT_SECRET_KEY
 
