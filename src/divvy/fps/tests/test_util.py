@@ -10,5 +10,10 @@ class UtilTestCase(unittest.TestCase):
         self.assertEquals(util.get_signature("secret_key", dict(foo="bar", one=1)),
                           'XtaSKfYnpyaQqfjL6mqX2Gow+Y0=')
 
+    def test_signature_version_2(self):
+        endpoint = "https://authorize.payments-sandbox.amazon.com/cobranded-ui/actions/start"
+        self.assertEquals(util.get_signature("secret_key", {"foo":"bar", "signatureVersion":"2"}, endpoint),
+                            "")
+
 
 #?signature=cfWBevnG0GSKzwHgZsixvDUy8cw%3D&expiry=03%2F2015&tokenID=DSLR1R6I9BB6H1C9PI3L7BKINICYDJW4J3LHTBEK7831QF5M1T77ML5ABCEVLAFI&status=SC&callerReference=foo

@@ -55,7 +55,7 @@ class ApiClient(base.AmazonFPSClient):
         parameters.setdefault('AWSAccessKeyId', self.access_key_id)
         parameters.setdefault('Version', AMAZON_FPS_API_VERSION)
         parameters['SignatureVersion'] = '1'
-        parameters['Signature'] = util.get_signature(self.secret_key, parameters)
+        parameters['Signature'] = util.get_signature(self.secret_key, parameters, self.endpoint)
         return util.query_string(parameters)
 
     def call(self, url):

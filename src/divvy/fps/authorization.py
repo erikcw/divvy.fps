@@ -83,7 +83,12 @@ class AuthorizationClient(base.AmazonFPSClient):
         """
         parameters.setdefault('callerKey', self.access_key_id)
         parameters.setdefault('version', AMAZON_FPS_VERSION)
-        parameters['awsSignature'] = util.get_signature(self.secret_key, parameters)
+        parameters.setdefault('signatureVersion', 1)
+        if str(parameters['signatureVersion']) == '2':
+            parameters.setdefault('signatureMethod', 'HmacSHA256')
+            parameters['signature'] = util.get_signature(self.secret_key, parameters, self.endpoint)
+        else:
+            parameters['awsSignature'] = util.get_signature(self.secret_key, parameters, self.endpoint)
         return util.query_string(parameters)
 
     def authorize_single_use_token(self, returnUrl, transactionAmount,
@@ -135,8 +140,7 @@ class AuthorizationClient(base.AmazonFPSClient):
         url = self.endpoint + qs
         return callerReference, url
 
-    def authorize_recurring_use_token(self, returnUrl, transactionAmount,
-                                   recurringPeriod,
+    def authorize_recurring_use_token(self, returnUrl, transactionAmount, recurringPeriod,
                                    addressName=None, addressLine1=None,
                                    addressLine2=None, city=None,
                                    state=None, zip=None,
@@ -224,6 +228,10 @@ class SingleUseTokenResponse(base.ParameterizedResponse):
 
 class RecurringUseTokenResponse(base.ParameterizedResponse):
     """A recurring use authorization response."""
+
+    def __init__(self, parameters, access_key_id=None, secret_key=None):
+        self.endpoint = SANDBOX_ENDPOINT if conf.RUN_IN_SANDBOX else ENDPOINT
+        super(RecurringUseTokenResponse, self).__init__(parameters, access_key_id=access_key_id, secret_key=secret_key)
 
     SUCCESS_CODES = (
         RecurringUseStatusCodes.SUCCESS_BALANCE_TRANSFER,

@@ -53,7 +53,7 @@ class SignatureValidator(object):
             raise AssertionError("expected signature in parameters: %r" %parameters)
         parameters = copy.copy(parameters)
         signature = signature or parameters.pop('signature')
-        sig_should_be = util.get_signature(self.secret_key, parameters)
+        sig_should_be = util.get_signature(self.secret_key, parameters, self.endpoint)
         matches = signature == sig_should_be
         if not matches:
             LOGGER.debug("Signatures did not match.  Expected %r but got %r",
