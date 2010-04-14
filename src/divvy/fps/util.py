@@ -29,7 +29,7 @@ def query_string(parameters):
     return "?"+urllib.urlencode(sorted([item for item in parameters.items()
                                         if item[1] is not None]))
 
-def get_signature(key, parameters, endpoint=None):
+def get_signature(key, parameters, endpoint=None, http_method="GET"):
     """Get a signature for FPS requests.
 
     Given a set of query parameters as a dict, this will compute a
@@ -38,17 +38,30 @@ def get_signature(key, parameters, endpoint=None):
     http://docs.amazonwebservices.com/AmazonFPS/2008-09-17/FPSAdvancedGuide/index.html?APPNDX_GeneratingaSignature.html
 
     """
-    if 'signatureVersion' in parameters and parameters['signatureVersion'] == '2':
+    signatureVersion = parameters.get('signatureVersion', '1')
+    algorithm = hashlib.sha1
+
+    if signatureVersion == '2':
         #use Signature Version 2 *Preferred*
-        return get_signature_v2(key, endpoint, parameters)
+        if 'signatureMethod' in parameters and parameters['signatureMethod'] == 'HmacSHA256':
+            algorithm = hashlib.sha256
+        string_to_sign = calculate_string_to_sign_v2(http_method, endpoint, parameters)
     else:
         #use Signature Version 1 -- ***will stop working after Nov 1, 2010***
-        msg = "".join(("%s%s" % item
-                       for item in sorted(parameters.items(), key=lambda item: item[0].lower())
-                       if item[1] is not None))
-        return base64.encodestring(hmac.new(key, msg, sha).digest()).strip()
+        string_to_sign = calculate_string_to_sign_v1(parameters)
 
-def get_signature_v2(key, endpoint, parameters):
+    return sign(string_to_sign, key, algorithm)
+
+def sign(data, key, algorithm):
+    return base64.encodestring(hmac.new(key, data, algorithm).digest()).strip()
+
+def calculate_string_to_sign_v1(parameters):
+    msg = "".join(("%s%s" % item
+                   for item in sorted(parameters.items(), key=lambda item: item[0].lower())
+                   if item[1] is not None))
+    return msg
+
+def calculate_string_to_sign_v2(http_method, endpoint, parameters):
     """Get a version 2 signature for FPS requests.
 
     Given a set of query parameters as a dict, this will compute a
@@ -57,22 +70,38 @@ def get_signature_v2(key, endpoint, parameters):
     http://docs.amazonwebservices.com/AmazonFPS/2008-09-17/FPSAdvancedGuide/index.html?APPNDX_GeneratingaSignature.html
 
     """
-    if 'signatureMethod' in parameters and parameters['signatureMethod'] == 'HmacSHA1':
-        hash_func = hashlib.sha1
-    else:
-        # signatureMethod = "HmacSHA256"
-        hash_func = hashlib.sha256
 
+    assert http_method != None, "http_method cannot be None"
     endpoint_parts = urllib2.urlparse.urlsplit(endpoint)
+    hostname = endpoint_parts.hostname
+    uri = endpoint_parts.path
 
-    string_to_sign = "GET\n"
-    string_to_sign += endpoint_parts.hostname.lower() + "\n"
-    if endpoint_parts.path == '':
-        string_to_sign += "/\n"
+    string_to_sign = []
+    string_to_sign.append(http_method)
+    string_to_sign.append("\n")
+
+    if hostname == None:
+        string_to_sign.append("")
     else:
-        string_to_sign += endpoint_parts.path + "\n"
-    string_to_sign += "&".join(("%s=%s" % (urllib.quote(item[0]), urllib.quote(item[1]),)
-                   for item in sorted(parameters.items(), key=lambda item: item[0])
-                   if item[1] is not None))
+        string_to_sign.append(hostname.lower())
+    string_to_sign.append("\n")
 
-    return base64.encodestring(hmac.new(key, string_to_sign, hash_func).digest()).strip()
+    if uri == None or len(uri.strip()) == 0:
+        string_to_sign.append("/")
+    else:
+        string_to_sign.append(endpoint_parts.path)
+    string_to_sign.append("\n")
+
+    string_to_sign.append("&".join(("%s=%s" % (url_encode(item[0]), url_encode(item[1]),)
+                   for item in sorted(parameters.items(), key=lambda item: item[0])
+                   if item[1] is not None)))
+
+    return "".join(string_to_sign)
+
+def url_encode(value, is_path=False):
+    encoded = urllib.quote(value)
+    if is_path:
+        encoded = encoded.replace("%2F", "/")
+    else:
+        encoded = encoded.replace("/", "%2F")
+    return encoded
