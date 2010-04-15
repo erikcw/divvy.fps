@@ -90,3 +90,27 @@ class PayResponse(Response):
         return "<%s transactionId=%r transactionStatus=%r>" % (self.__class__.__name__,
                                                                self.transactionId,
                                                                self.transactionStatus)
+
+
+class VerifySignatureResponse(Response):
+    """<?xml version="1.0"?>
+       <VerifySignatureResponse xmlns="http://fps.amazonaws.com/doc/2008-09-17/">
+        <VerifySignatureResult>
+         <VerificationStatus>Success</VerificationStatus>
+        </VerifySignatureResult>
+        <ResponseMetadata>
+         <RequestId>5f93bd31-739c-48a2-9559-359c2c55b8ec:0</RequestId>
+        </ResponseMetadata>
+       </VerifySignatureResponse>"""
+    def __init__(self, xmlstring):
+        super(VerifySignatureResponse, self).__init__(xmlstring)
+
+        verify_signature_result = self.xml.find(self.tag('VerifySignatureResult'))
+        self.verificationStatus = verify_signature_result.find(self.tag('VerificationStatus')).text
+        self.requestId = self.xml.find(self.tag('ResponseMetadata')).find(self.tag('RequestId')).text
+
+    def __repr__(self):
+        return "<%s requestId=%r verificationStatus=%r>" % (self.__class__.__name__,
+                                                               self.requestId,
+                                                               self.verificationStatus)
+

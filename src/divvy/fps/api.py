@@ -54,7 +54,7 @@ class ApiClient(base.AmazonFPSClient):
         """
         parameters.setdefault('AWSAccessKeyId', self.access_key_id)
         parameters.setdefault('Version', AMAZON_FPS_API_VERSION)
-        parameters['SignatureVersion'] = '1'
+        parameters['SignatureVersion'] = '2'
         parameters['Signature'] = util.get_signature(self.secret_key, parameters, self.endpoint)
         return util.query_string(parameters)
 
@@ -94,6 +94,25 @@ class ApiClient(base.AmazonFPSClient):
             response = xml.Response(data)
 
         LOGGER.info("Got pay response: %r", response)
+        return response
+
+    def verify_signature(self, url_end_point, http_parameters):
+        assert type(http_parameters) in [str, unicode], "http_parameters must be a string"
+        timestamp = time.strftime(TIME_FORMAT, time.gmtime())
+        qs = util.query_string({
+            'Action':'VerifySignature',
+            'Timestamp':timestamp,
+            'AWSAccessKeyId': self.access_key_id,
+            'Version': AMAZON_FPS_API_VERSION,
+            'UrlEndPoint': url_end_point,
+            'HttpParameters': http_parameters,})
+        url = self.endpoint+'/'+qs
+
+        data, success = self.call(url)
+        if success:
+            response = xml.VerifySignatureResponse(data)
+        else:
+            response = xml.Response(data)
         return response
 
 class Enum(object):
