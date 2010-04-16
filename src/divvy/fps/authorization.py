@@ -83,10 +83,10 @@ class AuthorizationClient(base.AmazonFPSClient):
         """
         parameters.setdefault('callerKey', self.access_key_id)
         parameters.setdefault('version', AMAZON_FPS_VERSION)
-        parameters.setdefault('signatureVersion', '2')
-        if parameters['signatureVersion'] == '2':
-            parameters.setdefault('signatureMethod', 'HmacSHA256')
-            parameters['signature'] = util.get_signature(self.secret_key, parameters, self.endpoint)
+        parameters.setdefault('SignatureVersion', '2')
+        if parameters['SignatureVersion'] == '2':
+            parameters.setdefault('SignatureMethod', 'HmacSHA256')
+            parameters['Signature'] = util.get_signature(self.secret_key, parameters, self.endpoint)
         else:
             parameters['awsSignature'] = util.get_signature(self.secret_key, parameters, self.endpoint)
         return util.query_string(parameters)

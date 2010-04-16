@@ -41,8 +41,6 @@ def get_signature(key, parameters, endpoint=None, http_method="GET"):
     signatureVersion = parameters.get('SignatureVersion', '1')
     algorithm = hashlib.sha1
 
-    print parameters, signatureVersion
-
     if signatureVersion == '2':
         #use Signature Version 2 *Preferred*
         if parameters.get('SignatureMethod') == 'HmacSHA256':
@@ -108,36 +106,3 @@ def url_encode(value, is_path=False):
         encoded = encoded.replace("/", "%2F")
     return encoded
 
-#def validate_signature_v2(parameters, url_endpoint, http_method):
-#    """Verifies signature using PKI."""
-#    assert 'signature' in parameters, "'signature' is missing from the parameters."
-#    assert 'signatureMethod' in parameters, "'signatureMethod' is missing from the parameters."
-#    assert parameters['signatureMethod'] == "RSA-SHA1", "'signatureMethod' present in parameters is invalid. Valid signatureMethods are : 'RSA-SHA1'"
-#    assert 'certificateUrl' in parameters, "'certificateUrl' is missing from the parameters."
-#
-#    certificate = get_public_key_certificate_as_string(parameters['certificateUrl'])
-#
-#    # calculate the string to sign.
-#    string_to_sign = calculate_string_to_sign_v2(http_method, url_endpoint, parameters)
-#    
-#def get_public_key_certificate_as_string(certificate_url):
-#    # @TODO: implement caching
-#    #@TODO: get from cache
-#
-#    opener = urllib2.build_opener(IgnoreRedirectHandler())
-#    result = opener.open(urllib2.Request(certificate_url)).read()
-#
-#    #@TODO: store in cache
-#    return result
-#
-#    
-#
-#class IgnoreRedirectHandler(urllib2.HTTPRedirectHandler):
-#    """This redirect handler will ignore redirects by raising an exception if they occur.
-#    This is used as a security feature and is recommended by Amazon for PKI signature verifiction."""
-#
-#    def http_error_301(self, req, fp, code, msg, headers):
-#        raise "This urlopener is setup to ignore Redirects"
-#
-#    def http_error_302(self, req, fp, code, msg, headers):
-#        raise "This urlopener is setup to ignore Redirects"
