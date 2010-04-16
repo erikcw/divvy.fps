@@ -55,6 +55,8 @@ class ApiClient(base.AmazonFPSClient):
         parameters.setdefault('AWSAccessKeyId', self.access_key_id)
         parameters.setdefault('Version', AMAZON_FPS_API_VERSION)
         parameters['SignatureVersion'] = '2'
+        if parameters.get('SignatureVersion') == '2':
+            parameters['SignatureMethod'] = 'HmacSHA256'
         parameters['Signature'] = util.get_signature(self.secret_key, parameters, self.endpoint)
         return util.query_string(parameters)
 

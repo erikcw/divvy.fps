@@ -229,9 +229,9 @@ class SingleUseTokenResponse(base.ParameterizedResponse):
 class RecurringUseTokenResponse(base.ParameterizedResponse):
     """A recurring use authorization response."""
 
-    def __init__(self, parameters, access_key_id=None, secret_key=None):
+    def __init__(self, parameters, access_key_id=None, secret_key=None, url_end_point=None):
         self.endpoint = SANDBOX_ENDPOINT if conf.RUN_IN_SANDBOX else ENDPOINT
-        super(RecurringUseTokenResponse, self).__init__(parameters, access_key_id=access_key_id, secret_key=secret_key)
+        super(RecurringUseTokenResponse, self).__init__(parameters, access_key_id=access_key_id, secret_key=secret_key, url_end_point=url_end_point)
 
     SUCCESS_CODES = (
         RecurringUseStatusCodes.SUCCESS_BALANCE_TRANSFER,
