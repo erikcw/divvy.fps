@@ -21,7 +21,6 @@
 import urllib
 import hmac
 import hashlib
-import sha
 import base64
 import urllib2
 
