@@ -20,7 +20,7 @@
 
 try:
     from django.conf import settings
-except ImportError, e:
+except ImportError:
     # django not installed
     settings = object()
 

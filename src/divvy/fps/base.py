@@ -23,7 +23,10 @@ import copy
 import random
 import logging
 import time
-import urllib2
+try:
+    from urllib2 import urlopen, HTTPError
+except ModuleNotFoundError:
+    from urllib.request import urlopen, HTTPError
 import urllib
 
 from divvy.fps import util
@@ -78,9 +81,9 @@ class SignatureValidator(object):
             url = self.endpoint+'/'+qs
 
             try:
-                data = urllib2.urlopen(url).read()
+                data = urlopen(url).read()
                 response = xml.VerifySignatureResponse(data)
-            except urllib2.HTTPError, e:
+            except HTTPError as e:
                 data = e.read()
                 response = xml.Response(data)
 

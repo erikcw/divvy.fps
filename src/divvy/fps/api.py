@@ -20,7 +20,10 @@
 
 import time
 import logging
-import urllib2
+try:
+    from urllib2 import urlopen, HTTPError
+except ModuleNotFoundError:
+    from urllib.request import urlopen, HTTPError
 import decimal
 import datetime
 
@@ -65,8 +68,8 @@ class ApiClient(base.AmazonFPSClient):
         success = False
         LOGGER.info("Making call to AWS FPS: %s", url)
         try:
-            response = urllib2.urlopen(url)
-        except urllib2.HTTPError, e:
+            response = urlopen(url)
+        except HTTPError as e:
             data = e.read()
             LOGGER.warn("Got an HTTP error retrieving %r: %s", url, data)
             e.close()
@@ -297,7 +300,7 @@ class IPNResponse(base.ParameterizedResponse):
         amount = self.parameters.get('transactionAmount')
         try:
             return decimal.Decimal(amount)
-        except decimal.InvalidOperation, e:
+        except decimal.InvalidOperation as e:
             LOGGER.exception("Got bad transaction amount from aws: %r", amount)
 
     @property
@@ -307,7 +310,7 @@ class IPNResponse(base.ParameterizedResponse):
         timestamp = self.parameters.get('transactionDate')
         try:
             return datetime.datetime.fromtimestamp(int(timestamp))
-        except ValueError, e:
+        except ValueError as e:
             LOGGER.exception("Got bad transactionDate from aws: %r", timestamp)
 
     @property

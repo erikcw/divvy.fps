@@ -22,7 +22,10 @@ import urllib
 import hmac
 import hashlib
 import base64
-import urllib2
+try:
+    from urllib.parse import urlsplit
+except ImportError:
+    from urlparse import urlsplit
 
 def query_string(parameters):
     return "?"+urllib.urlencode(sorted([item for item in parameters.items()
@@ -71,7 +74,7 @@ def calculate_string_to_sign_v2(http_method, endpoint, parameters):
     """
 
     assert http_method != None, "http_method cannot be None"
-    endpoint_parts = urllib2.urlparse.urlsplit(endpoint)
+    endpoint_parts = urlsplit(endpoint)
     hostname = endpoint_parts.hostname
     uri = endpoint_parts.path
 
